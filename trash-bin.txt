@@ -1,0 +1,67 @@
+sentences_to_be_added = []
+for sentence in enumerate(self.knowledge):
+    # See if there exists a sentence, that is a subset of another sentence
+    for comparsion_sentence in self.knowledge[sentence[0] + 1:]:
+        print("Comparing ", sentence[1]," to: ", comparsion_sentence)
+        # check if either sentence is a subset of the other
+        intersection = sentence[1].cells.intersection(comparsion_sentence.cells)
+        print("Intersection is: ", intersection)
+        # if an intersection exits (not an empty set)
+        if intersection != set():
+            new_count = abs(sentence[1].count - comparsion_sentence.count)
+            intersection_sentence = Sentence(
+                cells = intersection,
+                count = new_count
+            )
+            sentences_to_be_added.append(intersection_sentence)
+
+for sentence in sentences_to_be_added:
+    self.knowledge.append(sentence)
+
+print(self.safes)
+
+    
+#! Not sure if needed
+    def check_adjacents(self):
+        for row in range(8):
+            for column in range(8):
+                # get all adjacent cells:
+                center_cell = (row, column)
+                potential_cells = [
+                    (row - 1, column - 1),
+                    (row - 1, column),
+                    (row - 1, column + 1),
+
+                    (row, column - 1),
+                    (row, column + 1),
+
+                    (row + 1, column - 1),
+                    (row + 1, column ),
+                    (row + 1, column + 1),
+                ]
+                
+                cells_to_be_removed = []
+                for cell in potential_cells:
+                    if cell[0] < 0 or cell[0] > 7:
+                        cells_to_be_removed.append(cell)
+                        continue
+
+                    if cell[1] < 0 or cell[1] > 7:
+                        cells_to_be_removed.append(cell)
+                        
+                for cell in cells_to_be_removed:
+                    potential_cells.remove(cell)
+
+                # check if every adjacent cell is in moves made
+                for cell in potential_cells:
+                    break_out = False
+                    if cell not in self.moves_made:
+                        break_out = True
+                        break
+                if break_out == True:
+                    continue
+                print("Potential cells: ", potential_cells)
+                print("Moves made: ", self.moves_made)
+                print("all potential cells are in moves made")
+                # check if there arent any cells that have a value of 0
+                
