@@ -20,9 +20,26 @@ for sentence in sentences_to_be_added:
 
 print(self.safes)
 
+
+sentences_to_be_added = []
+        for sentence in self.knowledge:
+            if sentence.__eq__(new_sentence):
+                continue
+            is_subset = sentence.cells.issubset()
+            if is_subset == True:
+                new_count = abs(sentence.count - new_sentence.count)
+                intersection_sentence = Sentence(
+                    cells = intersection,
+                    count = new_count
+                )
+                sentences_to_be_added.append(intersection_sentence)
+
+        for sentence in sentences_to_be_added:
+            self.knowledge.append(sentence)
+
+
     
-#! Not sure if needed
-    def check_adjacents(self):
+def check_adjacents(self):
         for row in range(8):
             for column in range(8):
                 # get all adjacent cells:
@@ -60,8 +77,82 @@ print(self.safes)
                         break
                 if break_out == True:
                     continue
-                print("Potential cells: ", potential_cells)
+                """ print("Potential cells: ", potential_cells)
                 print("Moves made: ", self.moves_made)
-                print("all potential cells are in moves made")
+                print("all potential cells are in moves made") """
                 # check if there arent any cells that have a value of 0
+
+
+
+while True:
+    num_of_marked_cells = 0
+    for sentence in self.knowledge:
+        known_mines = copy.deepcopy(sentence.known_mines()) 
+        known_safes = copy.deepcopy(sentence.known_safes())
+        if known_mines != None:
+            for cell in known_mines:
+                self.mark_mine(cell)
+        if known_safes != None:
+            for cell in known_safes:
+                self.mark_safe(cell)
+
+    sentences_to_add = []
+    for sentence in self.knowledge:
+        for second_sentence in self.knowledge:
+            if sentence.__eq__(second_sentence) == True:
+                continue
+            a_subset_of_b = sentence.cells.issubset(second_sentence.cells)
+            b_subset_of_a = second_sentence.cells.issubset(sentence.cells)
+
+
+
+            if a_subset_of_b == True:
+                new_count = second_sentence.count - sentence.count
+                copy_of_b_cells = copy.deepcopy(second_sentence.cells)
+                for cell in sentence.cells:
+                    copy_of_b_cells.remove(cell)
                 
+                subset_sentence = Sentence(
+                    cells = copy_of_b_cells,
+                    count = new_count
+                )
+                # if the sentence already exists in the knowledge base, dont add it again
+                sentence_string = subset_sentence.__str__()
+                sentence_exists = False
+                for comp_sentence in self.knowledge:
+                    comp_sentence_string = comp_sentence.__str__()
+                    if comp_sentence_string == sentence_string:
+                        string_exists = True
+
+                if sentence_exists == True:
+                    continue
+                sentences_to_add.append(subset_sentence)
+
+            if b_subset_of_a == True:
+                new_count = sentence.count - second_sentence.count
+                copy_of_a_cells = copy.deepcopy(sentence.cells)
+                for cell in second_sentence.cells:
+                    copy_of_a_cells.remove(cell)
+
+                subset_sentence = Sentence(
+                    cells = copy_of_a_cells,
+                    count = new_count
+                )
+                # if the sentence already exists in the knowledge base, dont add it again
+                sentence_string = subset_sentence.__str__()
+                sentence_exists = False
+                for comp_sentence in self.knowledge:
+                    comp_sentence_string = comp_sentence.__str__()
+                    if comp_sentence_string == sentence_string:
+                        string_exists = True
+
+                if sentence_exists == True:
+                    continue
+                sentences_to_add.append(subset_sentence)
+        
+    print("Amount of sentences to be added", len(sentences_to_add))
+    if len(sentences_to_add) == 0:
+        break
+
+    for sentence in sentences_to_add:
+        self.knowledge.append(sentence)

@@ -160,7 +160,6 @@ class MinesweeperAI():
         self.moves_made = set()
 
         # Keep track of the number value inside clicked cells
-        self.moves_made_value = {}
 
         # Keep track of cells known to be safe or mines
         self.mines = set()
@@ -204,8 +203,6 @@ class MinesweeperAI():
         """
         self.moves_made.add(cell)
         self.mark_safe(cell)
-        # add the clicked cell's value to the moves_made_value dictionary
-        self.moves_made_value[cell] = count
 
         # Create a new sentence and add it to the knowledge base
         # Get every adjacent cell
@@ -253,16 +250,14 @@ class MinesweeperAI():
         self.knowledge.append(new_sentence)
         
 
-    # If, based on any of the sentences in self.knowledge,
-    # new cells can be marked as safe or as mines, then the function should do so.
+        # If, based on any of the sentences in self.knowledge,
+        # new cells can be marked as safe or as mines, then the function should do so.
 
         # add to the list of mines and safes, cells that are guaranteed to be so
         for sentence in self.knowledge:
-            known_mines = copy.deepcopy(sentence.known_mines())
+            known_mines = copy.deepcopy(sentence.known_mines()) 
             known_safes = copy.deepcopy(sentence.known_safes())
-            if known_mines != set():
-                print("The sentence is:", sentence)
-                print("These are the known mines inferred from the sentence:", known_mines)
+            if known_mines != None:
                 for cell in known_mines:
                     self.mark_mine(cell)
             if known_safes != None:
@@ -272,34 +267,78 @@ class MinesweeperAI():
         # if a cell is surrounded by non zero cells, it is guaranteed to be a mine
         # if every adjacent cell is in moves made, and non of them are 
 
-    # If, based on any of the sentences in self.knowledge, new sentences can be inferred 
-    # (using the subset method described in the Background), then those sentences should be added to the knowledge base as well.
+        # If, based on any of the sentences in self.knowledge, new sentences can be inferred 
+        # (using the subset method described in the Background), then those sentences should be added to the knowledge base as well.
         
-        # Compare the new sentence to existing sentences to see if it is a subset of the others
+        # Compare the new sentence to existing sentences to see if it is a subset of the others and vice versa
         sentences_to_be_added = []
         for sentence in self.knowledge:
-            if sentence.__eq__(new_sentence):
+            if sentence.__eq__(new_sentence) == True:
                 continue
-            intersection = sentence.cells.intersection(new_sentence.cells)
-            if intersection != set():
-                new_count = abs(sentence.count - new_sentence.count)
-                intersection_sentence = Sentence(
-                    cells = intersection,
+            a_subset_of_b = sentence.cells.issubset(new_sentence.cells)
+            b_subset_of_a = new_sentence.cells.issubset(sentence.cells)
+
+          
+
+
+            if a_subset_of_b == True:
+                new_count = new_sentence.count - sentence.count
+                copy_of_b_cells = copy.deepcopy(new_sentence.cells)
+                for cell in sentence.cells:
+                    copy_of_b_cells.remove(cell)
+                
+                subset_sentence = Sentence(
+                    cells = copy_of_b_cells,
                     count = new_count
                 )
-                sentences_to_be_added.append(intersection_sentence)
+                print("##############NEW SENTENCE################")
+                print("Sentence A: ", sentence)
+                print("Sentence B: ", new_sentence)
+                print("New Sentence: ", subset_sentence)
+                print("\n")
+                sentences_to_be_added.append(subset_sentence)
+
+            if b_subset_of_a == True:
+                new_count = sentence.count - new_sentence.count
+                copy_of_a_cells = copy.deepcopy(sentence.cells)
+                for cell in new_sentence.cells:
+                    copy_of_a_cells.remove(cell)
+
+                subset_sentence = Sentence(
+                    cells = copy_of_a_cells,
+                    count = new_count
+                )
+                print("##############NEW SENTENCE################")
+                print("Sentence A: ", sentence)
+                print("Sentence B: ", new_sentence)
+                print("New Sentence: ", subset_sentence)
+                print("\n")
+                sentences_to_be_added.append(subset_sentence)
 
         for sentence in sentences_to_be_added:
             self.knowledge.append(sentence)
-                
+        
+        
+        ##################################################
+        # Check each sentence in self.knowledge again to see if it is possible to mark more cells and safes/mines:
+
+
+
+
+        ##################################################
+        # check every sentence in self.knowledge and delete set() = 0 to avoid slowdown
+        for sentence in self.knowledge:
+            if len(sentence.cells) == 0:
+                self.knowledge.remove(sentence)
+
+            
+        print("Final knowledgebase: ")
+        for sentence in self.knowledge:
+            print(sentence)
+                    
+
         
 
-        # check to see if additional cells can be marked as mines
-        # for having non zero-mine adjacent cells
-        self.check_adjacents()
-
-        """ print("Known mines: ", self.mines)
-        print("Known safes: ", self.safes) """
 
         
 
@@ -313,7 +352,13 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        try:
+            for move in self.safes:
+                if move not in self.moves_made:
+                    return move
+        except:
+            print("Exception")
+            return None
 
     def make_random_move(self):
         """
@@ -322,49 +367,14 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        while True:
+            random_row = random.randint(0, 7)
+            random_column = random.randint(0, 7)
+
+            random_move = (random_row, random_column)
+            if random_move not in self.mines and random_move not in self.moves_made:
+                return random_move
     
-    def check_adjacents(self):
-        for row in range(8):
-            for column in range(8):
-                # get all adjacent cells:
-                center_cell = (row, column)
-                potential_cells = [
-                    (row - 1, column - 1),
-                    (row - 1, column),
-                    (row - 1, column + 1),
-
-                    (row, column - 1),
-                    (row, column + 1),
-
-                    (row + 1, column - 1),
-                    (row + 1, column ),
-                    (row + 1, column + 1),
-                ]
-                
-                cells_to_be_removed = []
-                for cell in potential_cells:
-                    if cell[0] < 0 or cell[0] > 7:
-                        cells_to_be_removed.append(cell)
-                        continue
-
-                    if cell[1] < 0 or cell[1] > 7:
-                        cells_to_be_removed.append(cell)
-                        
-                for cell in cells_to_be_removed:
-                    potential_cells.remove(cell)
-
-                # check if every adjacent cell is in moves made
-                for cell in potential_cells:
-                    break_out = False
-                    if cell not in self.moves_made:
-                        break_out = True
-                        break
-                if break_out == True:
-                    continue
-                """ print("Potential cells: ", potential_cells)
-                print("Moves made: ", self.moves_made)
-                print("all potential cells are in moves made") """
-                # check if there arent any cells that have a value of 0
+    
                 
                 

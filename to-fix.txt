@@ -1,0 +1,12 @@
+1) Cells that arent mines are considered mines
+    Possible causes:
+    # there is a sentence that says [(x, y)] = 1, when it shouldnt -->
+      something is wrong with sentence subsetting?
+      something is wrong with sentence.mark_safe?
+    
+    - if its not a problem with sentence subsetting, it probably results from marking cells as safe/mines
+2) Program slows down when making 25+ moves
+    Possible causes:
+    1) possibly alot of set() = 0 causing slowdown by being a subset of every sentence
+       Once full sentences are emptied by mark_safe, mark_mine creating alot of set() = 0
+       Solution: at the end of add_knowledge() loop over every sentence in self.knowledge and delete set() = 0
