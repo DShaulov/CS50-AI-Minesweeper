@@ -117,6 +117,7 @@ class Sentence():
         """
         # if mine count = 0, all cells must be safe
         if self.count == 0:
+            print("Safe sentence: ", self.__str__())
             return self.cells
 
         #TODO possible more options
@@ -201,6 +202,13 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+        final_count = count
+        move_num = 0
+        for move in self.moves_made:
+            move_num = move_num + 1
+        
+        print("#################     " + str(move_num) + "     ###############")
+        print("Clicked: ", cell)
         self.moves_made.add(cell)
         self.mark_safe(cell)
 
@@ -236,18 +244,23 @@ class MinesweeperAI():
         # only include cells whose state is undetermined
         final_cell_set = set()
         for cell in potential_cells:
-            if cell in self.safes or cell in self.mines:
+            if cell in self.safes:
+                continue
+            if cell in self.mines:
+                final_count = final_count - 1
                 continue
             else:
                 final_cell_set.add(cell)
 
         new_sentence = Sentence(
             cells = final_cell_set,
-            count = count
+            count = final_count
         )
 
         # add the new sentence to the knowledgebase
-        self.knowledge.append(new_sentence)
+        print("Adding new sentence to the knowledgebase: ", new_sentence)
+        if len(final_cell_set) != 0:
+            self.knowledge.append(new_sentence)
         
 
         # If, based on any of the sentences in self.knowledge,
@@ -269,10 +282,19 @@ class MinesweeperAI():
 
         # If, based on any of the sentences in self.knowledge, new sentences can be inferred 
         # (using the subset method described in the Background), then those sentences should be added to the knowledge base as well.
+
+        ##################################################
+        # check every sentence in self.knowledge and delete set() = 0 to avoid slowdown
+        for sentence in self.knowledge:
+            if sentence.cells == set():
+                self.knowledge.remove(sentence)
         
         # Compare the new sentence to existing sentences to see if it is a subset of the others and vice versa
         sentences_to_be_added = []
         for sentence in self.knowledge:
+            # avoid creating subsets of empty sentences to avoid slowdown
+            if new_sentence.cells == set():
+                break
             if sentence.__eq__(new_sentence) == True:
                 continue
             a_subset_of_b = sentence.cells.issubset(new_sentence.cells)
@@ -282,7 +304,7 @@ class MinesweeperAI():
 
 
             if a_subset_of_b == True:
-                new_count = new_sentence.count - sentence.count
+                new_count = abs(new_sentence.count - sentence.count)
                 copy_of_b_cells = copy.deepcopy(new_sentence.cells)
                 for cell in sentence.cells:
                     copy_of_b_cells.remove(cell)
@@ -299,7 +321,7 @@ class MinesweeperAI():
                 sentences_to_be_added.append(subset_sentence)
 
             if b_subset_of_a == True:
-                new_count = sentence.count - new_sentence.count
+                new_count = abs(sentence.count - new_sentence.count)
                 copy_of_a_cells = copy.deepcopy(sentence.cells)
                 for cell in new_sentence.cells:
                     copy_of_a_cells.remove(cell)
@@ -321,20 +343,37 @@ class MinesweeperAI():
         
         ##################################################
         # Check each sentence in self.knowledge again to see if it is possible to mark more cells and safes/mines:
-
+        for sentence in self.knowledge:
+            known_mines = copy.deepcopy(sentence.known_mines()) 
+            known_safes = copy.deepcopy(sentence.known_safes())
+            if known_mines != None:
+                for cell in known_mines:
+                    self.mark_mine(cell)
+            if known_safes != None:
+                for cell in known_safes:
+                    self.mark_safe(cell)
 
 
 
         ##################################################
         # check every sentence in self.knowledge and delete set() = 0 to avoid slowdown
         for sentence in self.knowledge:
-            if len(sentence.cells) == 0:
+            if sentence.cells == set():
                 self.knowledge.remove(sentence)
 
             
         print("Final knowledgebase: ")
         for sentence in self.knowledge:
             print(sentence)
+        
+        safes_not_made = []
+        for cell in self.safes:
+            if cell not in self.moves_made:
+                safes_not_made.append(cell)
+
+        print("Moves made: ", self.moves_made)
+        print("Known Safes Not Made: ", safes_not_made)
+        print("Known Mines: ", self.mines)
                     
 
         
@@ -355,6 +394,8 @@ class MinesweeperAI():
         try:
             for move in self.safes:
                 if move not in self.moves_made:
+                    print("Making safe move: ", move)
+                    print("\n\n")
                     return move
         except:
             print("Exception")
@@ -367,13 +408,25 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        while True:
-            random_row = random.randint(0, 7)
-            random_column = random.randint(0, 7)
+        all_board_moves = []
+        for x in range(8):
+            for y in range(8):
+                index = (x, y)
+                all_board_moves.append(index)
 
-            random_move = (random_row, random_column)
-            if random_move not in self.mines and random_move not in self.moves_made:
-                return random_move
+        for cell in all_board_moves:
+            print(cell)
+            if cell in self.mines:
+                continue
+            if cell in self.moves_made:
+                continue
+            else:
+                return cell
+
+        return None
+        
+
+
     
     
                 
