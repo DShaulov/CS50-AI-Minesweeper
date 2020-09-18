@@ -5,8 +5,28 @@
       something is wrong with sentence.mark_safe?
     
     - if its not a problem with sentence subsetting, it probably results from marking cells as safe/mines
+   
+   ####################### FIXED ###############################
 2) Program slows down when making 25+ moves
     Possible causes:
     1) possibly alot of set() = 0 causing slowdown by being a subset of every sentence
        Once full sentences are emptied by mark_safe, mark_mine creating alot of set() = 0
        Solution: at the end of add_knowledge() loop over every sentence in self.knowledge and delete set() = 0
+
+3) There are sentences with a negative amount of mines AND a single cell that contains 2 mines:
+    Final knowledgebase:
+    {(3, 4)} = 2
+    {(3, 2), (2, 3), (2, 2), (4, 2), (3, 4), (2, 4)} = 1
+    {(3, 4)} = 2
+    {(3, 2), (2, 3), (2, 2), (4, 2), (2, 4)} = -1
+    {(0, 6), (0, 7)} = 1
+    {(0, 6), (0, 7)} = 1
+
+    Possible causes:
+    1) A sentence that used to be {(0, 6), (0, 7), (3, 4)} = 2 has 2 cells marked safe ->
+       implies a problem with safe marking?
+    2) A problem in sentence creation, when some cells are marked as safe
+
+
+4) Cells that arent mines are considered mines, and cells that arent safe are considered safes
+   
